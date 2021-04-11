@@ -1,3 +1,7 @@
+# Original Repo 
+This is a fork from: https://github.com/allogn/Network-Immunization
+
+
 # Introduction
 
 The repository contains source files for Node Immunization algorithms. Given a directed network and a set of seed nodes, the problem is to select k nodes which to block/immunize so that the expected influence spread in the network is minimized. Simulations performed under Independent Cascade model.
@@ -5,6 +9,7 @@ The repository contains source files for Node Immunization algorithms. Given a d
 Supported algorithms:
 - Degree : degree heuristic
 - Dom : DAVA, dominator tree based algorithm
+- SparseShield : Scipy Sparse implementation of NetShield
 - NetShape : Convex optimization of a hazard matrix
 - NetShield : Minimization of a shield value
 - Random : Random selection of blocked nodes
