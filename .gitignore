@@ -1,0 +1,6 @@
+# No models
+graphs/
+outputs/
+
+# Files running
+*.pyc
