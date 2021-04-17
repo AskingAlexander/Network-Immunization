@@ -5,6 +5,8 @@ import numpy as np
 import logging
 from collections import defaultdict
 import warnings
+from joblib import Parallel, delayed
+
 
 class Simulator():
 
@@ -17,16 +19,20 @@ class Simulator():
     def add_blocked(self, name, node_set):
         self.blocked[name] = node_set
 
-    def run(self, iterations):
+    def run(self, iterations, num_threads = 1):
         assert(sum([not self.G.has_node(n) for n in self.seeds]) == 0)
         for key in self.blocked:
             blocked_list = self.blocked[key]
-            assert(sum([not self.G.has_node(n) for n in blocked_list]) == 0) # any blocked or seed node should exist in the graph
+            # any blocked or seed node should exist in the graph
+            assert(sum([not self.G.has_node(n) for n in blocked_list]) == 0)
         self.log['iterations'] = iterations
         iteration_results = []
-        for i in range(iterations):
-            iteration_results.append(self.run_iteration())
-        self.log.update(self.merge_results_across_iterations(iteration_results))
+        results = Parallel(n_jobs=num_threads)(
+            delayed(self.run_iteration)() for i in range(iterations))
+        for result in results:
+            iteration_results.append(result)
+        self.log.update(
+            self.merge_results_across_iterations(iteration_results))
         return self.log
 
     def run_iteration(self):
@@ -62,13 +68,17 @@ class Simulator():
         for blocked_set_name in self.blocked:
             blocked_list = self.blocked[blocked_set_name]
             results['solvers'][blocked_set_name] = {}
-            active_subgraph_with_blocked = active_subgraph.subgraph([node for node in active_subgraph.nodes() if node not in blocked_list])
-            active_subgraph_with_blocked = self.get_reachable_subgraph_from_seeds(active_subgraph_with_blocked)
+            active_subgraph_with_blocked = active_subgraph.subgraph(
+                [node for node in active_subgraph.nodes() if node not in blocked_list])
+            active_subgraph_with_blocked = self.get_reachable_subgraph_from_seeds(
+                active_subgraph_with_blocked)
             activated_node_amount = len(active_subgraph_with_blocked)
-            saved_node_amount = results['active nodes in unblocked graph'] - activated_node_amount
+            saved_node_amount = results['active nodes in unblocked graph'] - \
+                activated_node_amount
             results['solvers'][blocked_set_name]['activated nodes'] = activated_node_amount
             results['solvers'][blocked_set_name]['saved nodes'] = saved_node_amount
-            results['solvers'][blocked_set_name]['fraction of saved nodes to active nodes'] = saved_node_amount/results['active nodes in unblocked graph']
+            results['solvers'][blocked_set_name]['fraction of saved nodes to active nodes'] = saved_node_amount / \
+                results['active nodes in unblocked graph']
         t2 = time.time()
         results['simulation time'] = t2 - t1
         return results
@@ -85,7 +95,7 @@ class Simulator():
         for v in front_nodes:
             for u in self.G.successors(v):
                 if (np.random.rand() <= self.G[v][u]['weight']):
-                    new_front_edges.append((v,u))
+                    new_front_edges.append((v, u))
         return new_front_edges
 
     def merge_results_across_iterations(self, results):
@@ -96,13 +106,15 @@ class Simulator():
         for key in r:
             if key == "solvers":
                 continue
-            merged[key] = self.get_list_stats([results[i][key] for i in range(N)])
+            merged[key] = self.get_list_stats(
+                [results[i][key] for i in range(N)])
         merged['solvers'] = {}
         for alg in r['solvers']:
             merged['solvers'][alg] = {}
             for key in r['solvers'][alg]:
                 l = [results[i]['solvers'][alg][key] for i in range(N)]
-                merged['solvers'][alg][key] = self.get_list_stats([results[i]['solvers'][alg][key] for i in range(N)])
+                merged['solvers'][alg][key] = self.get_list_stats(
+                    [results[i]['solvers'][alg][key] for i in range(N)])
         return merged
 
     def get_list_stats(self, l):
