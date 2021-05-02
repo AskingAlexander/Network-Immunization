@@ -17,8 +17,7 @@ class Simulator():
         self.log = {}
 
     def add_blocked(self, name, node_set):
-        self.blocked[name] = list(
-            [node for node in node_set if (node not in self.seeds)])
+        self.blocked[name] = list(node_set)
 
     def run(self, iterations, num_threads=12):
         assert(sum([not self.G.has_node(n) for n in self.seeds]) == 0)
