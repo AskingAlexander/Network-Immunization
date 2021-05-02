@@ -1,6 +1,12 @@
 # No models
 graphs/
+seeds/
+
+# No outputs
+sims/
 outputs/
+results/
+
 
 # Files running
 *.pyc

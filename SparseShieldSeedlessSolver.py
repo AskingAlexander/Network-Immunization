@@ -57,13 +57,10 @@ class PriorityQueue:
         raise KeyError('pop from an empty priority queue')
 
 
-class SparseShieldSolver(Solver):
-    """
+class SparseShieldSeedlessSolver(Solver):
     def __init__(self, G, seeds, k, **params):
         Solver.__init__(self, G, seeds, k, **params)
-        for node in seeds:
-            self.G.remove_node(node)
-    """
+        self.to_add = len(seeds)
 
     def net_shield(self):
         G = self.G.to_undirected()
@@ -87,7 +84,7 @@ class SparseShieldSolver(Solver):
         pk = PriorityQueue(zip(scores.tolist(), indexes))
 
         S = set()
-        for it in range(self.k):
+        for _ in range(self.k + self.to_add):
             next_best = pk.pop_task()
             S.add(next_best)
             for n in G.neighbors(nodelist[next_best]):
@@ -99,7 +96,7 @@ class SparseShieldSolver(Solver):
         t2 = time.time()
         self.log['Total time'] = t2-t1
 
-        return [nodelist[i] for i in S]
+        return list([nodelist[i] for i in S if (nodelist[i] not in self.seeds)])[:self.k]
 
     def run(self):
         blocked = self.net_shield()
