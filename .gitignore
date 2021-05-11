@@ -6,6 +6,8 @@ seeds/
 sims/
 outputs/
 results/
+versus_out/
+versus_results/
 
 
 # Files running
