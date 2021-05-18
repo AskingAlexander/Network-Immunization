@@ -19,7 +19,7 @@ class Simulator():
     def add_blocked(self, name, node_set):
         self.blocked[name] = list(node_set)
 
-    def run(self, iterations, num_threads=12):
+    def run(self, iterations, num_threads=22):
         assert(sum([not self.G.has_node(n) for n in self.seeds]) == 0)
         for key in self.blocked:
             blocked_list = self.blocked[key]
